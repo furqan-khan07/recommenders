@@ -1219,17 +1219,17 @@ def _get_item_feature_similarity(
     df = pd.merge(df1, df2, on="key", how="outer").drop("key", axis=1)
     df_item_feature_pair = df[(df["i1"] <= df["i2"])].reset_index(drop=True)
 
-    def _cosine_sim(x):
-        norm_f1 = np.linalg.norm(x.f1, 2)
-        norm_f2 = np.linalg.norm(x.f2, 2)
+    def _cosine_sim(f1, f2):
+        norm_f1 = np.linalg.norm(f1, 2)
+        norm_f2 = np.linalg.norm(f2, 2)
         if norm_f1 == 0 or norm_f2 == 0:
             return 0.0
-        return float(x.f1.dot(x.f2)) / float(norm_f1 * norm_f2)
+        return float(f1.dot(f2)) / float(norm_f1 * norm_f2)
 
-    df_item_feature_pair[col_sim] = df_item_feature_pair.apply(
-        _cosine_sim,
-        axis=1,
-    )
+    df_item_feature_pair[col_sim] = [
+        _cosine_sim(f1, f2)
+        for f1, f2 in zip(df_item_feature_pair["f1"], df_item_feature_pair["f2"])
+    ]
 
     df_cosine_similarity = df_item_feature_pair[["i1", "i2", col_sim]].sort_values(
         ["i1", "i2"]
